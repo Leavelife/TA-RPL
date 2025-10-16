@@ -11,6 +11,7 @@ export const authOptions = {
   pages: {
     signIn: "/login", // nanti diarahkan ke halaman login kita
   },
+    secret: process.env.NEXTAUTH_SECRET,
 };
 
 const handler = NextAuth(authOptions);

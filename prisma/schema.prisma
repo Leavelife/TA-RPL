@@ -1,0 +1,79 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model jasa_pengirim {
+  id_pengiriman    Int         @id @default(autoincrement())
+  jasa_kirim       String      @db.VarChar(100)
+  harga_pengiriman Int
+  transaksi        transaksi[]
+}
+
+model kategori {
+  id_kategori   Int      @id @default(autoincrement())
+  nama_kategori String   @db.VarChar(100)
+  produk        produk[]
+}
+
+model keranjang {
+  id_keranjang     Int    @id @default(autoincrement())
+  id_user          Int
+  id_produk        Int
+  jumlah_pembelian Int
+  total_harga      Int
+  users            users  @relation(fields: [id_user], references: [id_user], onDelete: NoAction, onUpdate: NoAction, map: "keranjang_ibfk_1")
+  produk           produk @relation(fields: [id_produk], references: [id_produk], onDelete: NoAction, onUpdate: NoAction, map: "keranjang_ibfk_2")
+
+  @@index([id_produk], map: "id_produk")
+  @@index([id_user], map: "id_user")
+}
+
+model produk {
+  id_produk   Int         @id @default(autoincrement())
+  id_kategori Int
+  nama_produk String      @db.VarChar(100)
+  stok_kg     Int?        @default(0)
+  harga_kg    Int
+  deskripsi   String?     @db.Text
+  keranjang   keranjang[]
+  kategori    kategori    @relation(fields: [id_kategori], references: [id_kategori], onDelete: NoAction, onUpdate: NoAction, map: "produk_ibfk_1")
+
+  @@index([id_kategori], map: "id_kategori")
+}
+
+model transaksi {
+  id_transaksi     Int                         @id @default(autoincrement())
+  id_user          Int
+  id_pengiriman    Int
+  metode_transaksi transaksi_metode_transaksi?
+  tgl_transaksi    DateTime?                   @default(now()) @db.Timestamp(0)
+  users            users                       @relation(fields: [id_user], references: [id_user], onDelete: NoAction, onUpdate: NoAction, map: "transaksi_ibfk_1")
+  jasa_pengirim    jasa_pengirim               @relation(fields: [id_pengiriman], references: [id_pengiriman], onDelete: NoAction, onUpdate: NoAction, map: "transaksi_ibfk_2")
+
+  @@index([id_pengiriman], map: "id_pengiriman")
+  @@index([id_user], map: "id_user")
+}
+
+model users {
+  id_user   Int         @id @default(autoincrement())
+  username  String      @db.VarChar(50)
+  password  String      @db.VarChar(255)
+  token     String?     @db.VarChar(255)
+  email     String      @unique(map: "email") @db.VarChar(100)
+  alamat    String?     @db.VarChar(100)
+  keranjang keranjang[]
+  transaksi transaksi[]
+}
+
+enum transaksi_metode_transaksi {
+  Bank
+  Qris
+  Dana
+  Paypal
+}
